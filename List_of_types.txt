@@ -1,0 +1,15 @@
+typedef struct s_Item {
+	int key;
+	int val;
+	struct s_Item* next;
+	struct s_Item* prev;
+
+} t_Item;
+
+
+typedef struct {
+	int version;
+	int ItemsCount;
+	char reserve[100];
+
+} t_headerFile;
