@@ -1,0 +1,228 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <conio.h>
+#include "List_of_types.h"
+#pragma warning(disable: 4996)
+#define Version 1
+
+t_Item* Head;
+t_Item* Tail;
+t_Item* move;
+t_headerFile fileHeader;
+int Quantity = 0;
+
+t_Item* add(int key, int val)
+{
+	Quantity++;
+	move = (t_Item*)malloc(sizeof(t_Item));
+	if (!move)
+	{
+		// error
+		return 1;
+	}
+
+	if (Head == NULL) {
+		move->next = NULL;
+		move->prev = NULL;
+		Head = move;
+		Tail = move;
+
+	}
+	else {
+		move->next = NULL;
+		move->prev = Tail;
+		Tail->next = move;
+		Tail = move;
+	}
+
+	move->key = key;
+	move->val = val;
+
+	fileHeader.ItemsCount = Quantity;
+
+}
+
+
+
+t_Item* search(int key)
+{
+	t_Item* move = Head;
+	t_Item* current = Head;
+	while (move != NULL)
+	{
+		current = move;
+		move = move->next;
+		if (current->key == key)
+		{
+			return current;
+		}
+	}
+	printf("The key is not found\n");
+	return NULL;
+}
+
+void remove_1(int key)
+{
+	Quantity--;
+	t_Item* key_remove = search(key);
+	if (key_remove == Head && key_remove->next == NULL)
+	{
+		Head = NULL;
+		Tail = NULL;
+		free(key_remove);
+    }
+	else if (key_remove == Head)
+	{
+		key_remove = key_remove->next;
+		key_remove->prev = NULL;
+		free(Head);
+		Head = key_remove;
+
+	}
+	else if (key_remove == Tail)
+	{
+		key_remove = key_remove->prev;
+		key_remove->next = NULL;
+		free(Tail);
+		Tail = key_remove;
+	}
+	else
+	{
+		key_remove->prev->next = key_remove->next;
+		key_remove->next->prev = key_remove->prev;
+		free(key_remove);
+	}
+
+	fileHeader.ItemsCount = Quantity;
+}
+
+
+void saving_file(char file_name[100])
+{
+
+	FILE* f = fopen(file_name, "w");
+	if (!f)
+	{
+		printf("The file did not open");
+		exit(1);
+	}
+	fwrite(&fileHeader, sizeof(t_headerFile),1,f);
+	t_Item* curr = Head;
+	while (curr != NULL)
+	{
+		fwrite(curr, sizeof(t_Item), 1, f);
+		curr = curr->next;
+
+	}
+	fclose(f);
+}
+
+
+void Downloadable_file(char file_name[100])
+{
+	Head = NULL;
+	Tail = NULL;
+	t_Item* curr_1;
+	FILE* f = fopen(file_name, "r");
+	if (!f)
+	{
+		printf("The file did not open");
+		exit(1);
+	}
+	t_headerFile headeroffiel;
+	int read = fread(&headeroffiel, sizeof(t_headerFile), 1, f);
+	if (read == NULL)
+	{
+		return 1;
+	}
+
+	    for (int i = 0; i < headeroffiel.ItemsCount; i++)
+     	{
+			curr_1 = (t_Item*)malloc(sizeof(t_Item));
+		    read = fread(curr_1, sizeof(t_Item), 1, f);
+		    add(curr_1->key, curr_1->val);
+
+        }
+
+
+
+		curr_1 = Head;
+
+	while (curr_1 != NULL)
+	{
+		curr_1 = curr_1->next;
+		free(Head);
+		Head = curr_1;
+	}
+	return 0;
+
+
+}
+
+
+
+
+
+int main() 
+{
+	Head = NULL;
+	Tail = NULL;
+
+
+	fileHeader.version = Version;
+	char file_name[100];
+	char userRespons = '1';
+	char end = 'E';
+	int key;
+	int val;
+
+
+	while (userRespons != end) 
+	{
+		printf("Please press A for key and value \npress F for enter a key and get it's valuec \npress U to enter the exicting key and the new value that you want to insert and change\npress D for enter the exicting key and delete the key and the value\npress S for insert file name and open a file to put inside the documents\npress L for files name to load on the comuter\nFOR EXIT PRESS E\n\n");
+		userRespons = getch();
+		switch (userRespons)
+		{
+		case 'A':
+			scanf("%d%d", &key, &val);
+			add(key, val);
+			break;
+
+		case 'F':
+			scanf("%d", &key);
+			t_Item* print = search(key);
+			printf("the value is %d\n", print->val);
+			break;
+
+		case 'U':
+			scanf("%d%d", &key, &val);
+			t_Item* change_value = search(key);
+			change_value->val = val;
+			printf("The value has changed\n");
+			break;
+
+		case 'D':
+			scanf("%d", &key);
+			remove_1(key);
+			printf("The value has been removed\n");
+			break;
+
+		case 'S':
+			scanf("%s", file_name);
+			saving_file(file_name);
+			break;
+
+		case 'L':
+			scanf("%s", file_name);
+			Downloadable_file(file_name);
+			break;
+
+		default:
+			printf("error");
+			break;
+		}
+
+	}
+	return 0;
+}
